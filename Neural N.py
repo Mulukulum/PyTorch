@@ -143,8 +143,7 @@ class TrainSaveWidget(QtWidgets.QWidget):
     def __init__(self,frame):
         super().__init__(frame)
         self.ui = Ui_TrainSaveWidget()
-        self.ui.setupUi(self)
-        
+        self.ui.setupUi(self)        
 
 class PTAppMainWindow(QtWidgets.QMainWindow):
 

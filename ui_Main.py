@@ -18,7 +18,7 @@ class Ui_MainWindow(object):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(803, 512)
-        MainWindow.setMinimumSize(QSize(240, 135))
+        MainWindow.setMinimumSize(QSize(800, 600))
         self.MainWindowWidget = QWidget(MainWindow)
         self.MainWindowWidget.setObjectName(u"MainWindowWidget")
         self.gridLayout = QGridLayout(self.MainWindowWidget)

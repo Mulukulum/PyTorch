@@ -28,6 +28,8 @@ class Ui_SettingsWidget(object):
         self.AboutTheProject = QTextBrowser(Form)
         self.AboutTheProject.setObjectName(u"AboutTheProject")
         self.AboutTheProject.setReadOnly(True)
+        self.AboutTheProject.setOpenExternalLinks(True)
+        
 
         self.verticalLayout.addWidget(self.AboutTheProject)
 
