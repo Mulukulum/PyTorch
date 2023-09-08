@@ -13,7 +13,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 
-class Ui_TrainLoadWidget(object):
+class Ui_TrainSaveWidget(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
