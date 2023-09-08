@@ -147,8 +147,12 @@ class TrainSaveWidget(QtWidgets.QWidget):
 
 class PTAppMainWindow(QtWidgets.QMainWindow):
 
+   
     def __init__(self):
         super().__init__()
+        self.TRAIN_SAVE_WIDGET=1
+        self.LOAD_TEST_WIDGET=2
+        self.CurrentFocus=self.SETTINGS_WIDGET=3
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.resize(960,540)
@@ -158,18 +162,30 @@ class PTAppMainWindow(QtWidgets.QMainWindow):
         self.ui.TrainSaveButton.clicked.connect(lambda: self.showTrainSaveWidget())
     
     def showSettingsWidget(self):
+        if self.CurrentFocus==self.SETTINGS_WIDGET:
+            return
+        else:
+            self.CurrentFocus=self.SETTINGS_WIDGET
         self.widgetFrame.deleteLater()
         settings_widget=SettingsWidget(self.ui.MainWindowFrame)
         self.ui.VLayoutForFocusWidget.addWidget(settings_widget)
         self.widgetFrame=settings_widget
     
     def showLoadTestWidget(self):
+        if self.CurrentFocus==self.LOAD_TEST_WIDGET:
+            return
+        else:
+            self.CurrentFocus=self.LOAD_TEST_WIDGET
         self.widgetFrame.deleteLater()
         loadtest_widget=LoadTestWidget(self.ui.MainWindowFrame)
         self.ui.VLayoutForFocusWidget.addWidget(loadtest_widget)
         self.widgetFrame=loadtest_widget
     
     def showTrainSaveWidget(self):
+        if self.CurrentFocus==self.TRAIN_SAVE_WIDGET:
+            return
+        else:
+            self.CurrentFocus=self.TRAIN_SAVE_WIDGET
         self.widgetFrame.deleteLater()
         trainsave_widget=TrainSaveWidget(self.ui.MainWindowFrame)
         self.ui.VLayoutForFocusWidget.addWidget(trainsave_widget)
