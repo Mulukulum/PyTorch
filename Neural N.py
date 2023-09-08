@@ -272,7 +272,7 @@ class ModelTester_Manual():
 app=QtWidgets.QApplication(sys.argv)
 window=PTAppMainWindow()
 window.show()
-app.exec_()
+sys.exit(app.exec_())
 
 #tensor=torch.zeros(3,900,1600)
 #print(tensor.shape)
