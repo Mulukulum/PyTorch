@@ -57,6 +57,8 @@ except:
 
 from ui_Main import Ui_MainWindow
 from ui_Settings import Ui_SettingsWidget
+from ui_TrainSave import Ui_TrainSaveWidget
+from ui_LoadTest import Ui_LoadTestWidget
 
 #Main Functions
 def get_cuda_information():
@@ -133,11 +135,16 @@ class LoadTestWidget(QtWidgets.QWidget):
 
     def __init__(self,frame):
         super().__init__(frame)
+        self.ui = Ui_LoadTestWidget()
+        self.ui.setupUi(self)
 
 class TrainSaveWidget(QtWidgets.QWidget):
 
     def __init__(self,frame):
         super().__init__(frame)
+        self.ui = Ui_TrainSaveWidget()
+        self.ui.setupUi(self)
+        
 
 class PTAppMainWindow(QtWidgets.QMainWindow):
 
