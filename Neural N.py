@@ -176,7 +176,7 @@ class LoadTestWidget(QtWidgets.QWidget):
     def TestForLong(self):
         self.ui.TestForLongDuration.setDisabled(True)
         self.ui.TestImageButton.hide()
-        c=1000
+        c=500
         while c>0:
             self.ui.TestImageButton.click()
             self.delay(1)
@@ -272,14 +272,6 @@ class TrainSaveWidget(QtWidgets.QWidget):
         self.ui.EpochCountSpinBox.setValue(10)
         self.ui.TrainModelButton.clicked.connect(lambda : self.start_training())
         self.ui.SaveModelButton.clicked.connect(lambda: self.save_model())
-        self.ui.CreateConvolutionalNeuralNetwork.stateChanged.connect(lambda: self.ChangeState())
-
-    def ChangeState(self):
-        if self.ui.CreateConvolutionalNeuralNetwork.isChecked():
-            self.ui.BatchSizeSpinBox.setValue(32)
-            self.ui.BatchSizeSpinBox.setDisabled(True)
-        else:
-            self.ui.BatchSizeSpinBox.setDisabled(False)
 
     def save_model(self):
         FileName=QtWidgets.QFileDialog.getSaveFileName(self,'Choose Location to save Model',DIRECTORY+f"//Models//{self.model.mdltype}//","Pytorch Models (*.pth)")[0]
@@ -506,7 +498,10 @@ class ModelTester_Manual():
 app=QtWidgets.QApplication(sys.argv)
 window=PTAppMainWindow()
 window.show()
-sys.exit(app.exec_())
+try:
+    sys.exit(app.exec_())
+except:
+    print("AAA")
 
 #tensor=torch.zeros(3,900,1600)
 #print(tensor.shape)
