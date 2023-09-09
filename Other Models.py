@@ -10,14 +10,14 @@ PREFERRED_DEVICE='cuda'
 
     
 class ConvolutionalModel(nn.Module):
-    def __init__(self,activation_fn=nn.Tanh):
+    def __init__(self,activation_fn=nn.LeakyReLU):
         super().__init__()
         self.to(PREFERRED_DEVICE)
         self.model = nn.Sequential(
             nn.Conv2d(1,32,(3,3)),
-            activation_fn(),
+            activation_fn(9e-2),
             nn.Conv2d(32, 64, (3,3)), 
-            activation_fn(),
+            activation_fn(3e-2),
             nn.Conv2d(64, 64, (3,3)),
             activation_fn(),
             nn.Flatten(), 
