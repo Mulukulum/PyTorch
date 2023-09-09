@@ -284,7 +284,7 @@ class TrainSaveWidget(QtWidgets.QWidget):
         self.ui = Ui_TrainSaveWidget()
         self.ui.setupUi(self)
         self.model=LinearNetwork()
-        #self.ui.SaveModelButton.setDisabled(True)
+        self.ui.SaveModelButton.setDisabled(True)
         self.ui.LearningRateSpinBox.setSingleStep(0.01)
         self.ui.BatchSizeSpinBox.setMinimum(1)
         self.ui.BatchSizeSpinBox.setMaximum(256)
@@ -435,7 +435,7 @@ class ModelTrainer(QtCore.QObject):
         model.to(PREFERRED_DEVICE)
 
         for epoch in range(1, number_of_epochs+1) : 
-            print(epoch)
+            print(f'Epoch Number : {epoch}')
             for batch in DATASET:
                 input_batch , actual_values = batch
                 input_batch = input_batch.to(PREFERRED_DEVICE)
