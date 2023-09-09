@@ -127,6 +127,7 @@ class LinearNetwork(nn.Module):
 
     def forward(self, x):
         x = self.flatten(x)
+        x = x.to(PREFERRED_DEVICE)
         return self.model(x)
 
 class SettingsWidget(QtWidgets.QWidget):
@@ -164,6 +165,26 @@ class LoadTestWidget(QtWidgets.QWidget):
         self.model_tester=None
         self.ui.LoadModelButton.clicked.connect(lambda : self.load_and_begin_testing())
         self.ui.TestImageButton.clicked.connect(lambda: self.test_loop())
+        self.ui.TestForLongDuration.clicked.connect(lambda : self.TestForLong())
+
+    def delay(self,n=1):
+        dieTime= QtCore.QTime.currentTime().addMSecs(1000*n)
+        while QtCore.QTime.currentTime() < dieTime:
+            QtCore.QCoreApplication.processEvents(QtCore.QEventLoop.AllEvents,100)
+    
+    
+    def TestForLong(self):
+        self.ui.TestForLongDuration.setDisabled(True)
+        self.ui.TestImageButton.hide()
+        c=1000
+        while c>0:
+            self.ui.TestImageButton.click()
+            self.delay(1)
+            c-=1
+        self.ui.TestForLongDuration.setEnabled(True)
+        self.ui.TestImageButton.show()
+        self.ui.TestImageButton.setEnabled(True)
+        
     
     def load_model(self):
         #popup to select the model
@@ -198,7 +219,7 @@ class LoadTestWidget(QtWidgets.QWidget):
         self.model.eval()
         self.model_tester=ModelTester_Manual(model=self.model)
         self.ModelLoaded=True
-        #self.ui.TestForLongDuration.setDisabled(False)
+        self.ui.TestForLongDuration.setDisabled(False)
         self.ui.TestImageButton.setDisabled(False)
         self.ui.ModelNameLabel.setText(dirs[-1])
         self.ui.ModelTypeLabel.setText(str(self.model))
@@ -213,16 +234,16 @@ class LoadTestWidget(QtWidgets.QWidget):
         self.ui.PictureLabel.setPixmap(QtGui.QPixmap(self.model_tester.imgpath))
         self.ui.PictureLabel.setScaledContents(True)
         self.ui.CorrectAnswerLabel.setText(str(self.model_tester.number))
-        self.ui.CurrentGuessValueLabel.setText(self.model_tester.test_model())
-        self.ui.TotalCorrectGuessLabel.setText(str(self.model_tester.correct_guesses) + f'({self.model_tester.accuracy}%)' )
+        self.ui.CurrentGuessValueLabel.setText(str(self.model_tester.test_model()))
+        self.ui.TotalCorrectGuessLabel.setText(str(self.model_tester.correct_guesses) + f'({self.model_tester.accuracy*100}%)' )
         self.ui.TotalGuessesLabel.setText(str(self.model_tester.guesses))
     
     def test_loop(self):
         self.ui.PictureLabel.setPixmap(QtGui.QPixmap(self.model_tester.imgpath))
         self.ui.PictureLabel.setScaledContents(True)
         self.ui.CorrectAnswerLabel.setText(str(self.model_tester.number))
-        #self.ui.CurrentGuessValueLabel.setText(self.model_tester.test_model())
-        self.ui.TotalCorrectGuessLabel.setText(str(self.model_tester.correct_guesses) + f'({self.model_tester.accuracy}%)' )
+        self.ui.CurrentGuessValueLabel.setText(str(self.model_tester.test_model()))
+        self.ui.TotalCorrectGuessLabel.setText(str(self.model_tester.correct_guesses) + f'({self.model_tester.accuracy*100}%)' )
         self.ui.TotalGuessesLabel.setText(str(self.model_tester.guesses))
                                          
 
@@ -461,19 +482,23 @@ class ModelTester_Manual():
         self.guesses+=1
         image = PillowImage.open(self.imgpath)
         image_tensor = PILToTensor()(image)
+        image_tensor = image_tensor.unsqueeze(0)
         image_tensor = image_tensor.float()
         image_tensor.to(PREFERRED_DEVICE)
         with torch.no_grad():
-            self.current_guess = torch.argmax(self.model(image_tensor).item())
+            self.current_guess = torch.argmax(self.model(image_tensor)).item()
+            return self.current_guess
     
     def test_model(self):
         self.testing=True
         self.model.eval()
-        if self.number==self.get_guess():
+        guess=self.get_guess()
+        if int(self.number)==guess:
             self.correct_guesses+=1
         self.accuracy=self.correct_guesses/self.guesses
         self.testing=False
         self.update_file()
+        return guess
         
 
 #App Start
