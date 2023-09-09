@@ -48,7 +48,7 @@ except:
 try:
     import torch
     from torch import nn
-    from torchvision.transforms import ToTensor
+    from torchvision.transforms import Compose, PILToTensor, ToTensor
     from torchvision import datasets
     from torch.utils.data import DataLoader
     from torch.optim import SGD
@@ -94,7 +94,7 @@ class ConvolutionalModel(nn.Module):
             nn.Conv2d(64, 64, (3,3)), 
             nn.LeakyReLU(),
             nn.Flatten(), 
-            nn.Linear(64*22*22, 10)
+            nn.Linear(64*(28-6)*(28-6), 10),
         )
     
     def __repr__(self):
@@ -102,7 +102,6 @@ class ConvolutionalModel(nn.Module):
 
     def forward(self, x): 
         x = x.to(PREFERRED_DEVICE)
-        #print(x.device)
         return self.model(x)
 
 class LinearNetwork(nn.Module):
@@ -127,7 +126,6 @@ class LinearNetwork(nn.Module):
 
     def forward(self, x):
         x = self.flatten(x)
-        x = x.to(PREFERRED_DEVICE)
         return self.model(x)
 
 class SettingsWidget(QtWidgets.QWidget):
@@ -175,6 +173,7 @@ class LoadTestWidget(QtWidgets.QWidget):
             #print(f'{filepath=}')
             try:
                 state_dict=get_model_state_dict(filepath,PREFERRED_DEVICE)
+                #print(state_dict)
             except :
                 logging.info('Couldnt unpickle model')
                 QtWidgets.QMessageBox.information(self,"Model could not be opened","Please choose a valid file",QtWidgets.QMessageBox.Ok)
@@ -234,6 +233,7 @@ class TrainSaveWidget(QtWidgets.QWidget):
         self.ui.setupUi(self)
         self.model=LinearNetwork()
         #self.ui.SaveModelButton.setDisabled(True)
+        self.ui.LearningRateSpinBox.setSingleStep(0.01)
         self.ui.BatchSizeSpinBox.setMinimum(1)
         self.ui.BatchSizeSpinBox.setMaximum(256)
         self.ui.LearningRateSpinBox.setMaximum(1.0)
@@ -251,7 +251,7 @@ class TrainSaveWidget(QtWidgets.QWidget):
 
     def save_model(self):
         FileName=QtWidgets.QFileDialog.getSaveFileName(self,'Choose Location to save Model',DIRECTORY+f"//Models//{self.model.mdltype}//","Pytorch Models (*.pth)")[0]
-        save_model_state_dict(self.model,FileName)
+        save_model_state_dict(self.model.state_dict(),FileName)
         
 
     def start_training(self):
@@ -283,6 +283,7 @@ class TrainSaveWidget(QtWidgets.QWidget):
         self.ui.EpochCountSpinBox.setDisabled(False)
         self.ui.EpochUpdateSpinBox.setDisabled(False)
         self.ui.LearningRateSpinBox.setDisabled(False)
+        self.ui.CreateConvolutionalNeuralNetwork.setDisabled(False)
         #Training Loop started
 
 
@@ -429,6 +430,8 @@ class ModelTester_Manual():
             logging.CRITICAL('DATASET NOT PRESENT. UNZIP THE FOLDER INSIDE TO THE DIRECTORY OF THE SCRIPT WITH THE NAME "MNIST Dataset JPG format" ')
             sys.exit()
         self.model=model
+        
+        self.model.to(PREFERRED_DEVICE)
         self.number=random.choice('0123456789')
         self.random_file=random.choice(os.listdir(DIRECTORY+f'//MNIST Dataset JPG format//MNIST - JPG - testing//{self.number}//'))
         self.imgpath=DIRECTORY+f'//MNIST Dataset JPG format//MNIST - JPG - testing//{self.number}//{self.random_file}'
@@ -446,11 +449,16 @@ class ModelTester_Manual():
     def get_guess(self):
         self.guesses+=1
         image = PillowImage.open(self.imgpath)
-        image_tensor = ToTensor()(image).unsqueeze(0)
-        self.current_guess = torch.argmax(self.model(image_tensor).item())
+        image_tensor = PILToTensor()(image)
+        image_tensor = image_tensor.float()
+        image_tensor.to(PREFERRED_DEVICE)
+        print(image_tensor.shape)
+        with torch.no_grad():
+            self.current_guess = torch.argmax(self.model(image_tensor).item())
     
     def test_model(self):
         self.testing=True
+        self.model.eval()
         if self.number==self.get_guess():
             self.correct_guesses+=1
         self.accuracy=self.correct_guesses/self.guesses
