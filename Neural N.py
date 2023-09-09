@@ -11,6 +11,7 @@ RUNNING_SCRIPT_FROM = sys.argv[0]
 DIRECTORY=os.path.dirname(RUNNING_SCRIPT_FROM)
 LOGGING_LEVEL= logging.INFO
 PREFERRED_DEVICE= 'cpu'
+CURRENT_BATCH_SIZE=16
 
 try:
     open('settings.txt','x')
@@ -210,6 +211,7 @@ class LoadTestWidget(QtWidgets.QWidget):
             return
         #Gets the current file from the tester and displays it.
         self.ui.PictureLabel.setPixmap(QtGui.QPixmap(self.model_tester.imgpath))
+        self.ui.PictureLabel.setScaledContents(True)
         self.ui.CorrectAnswerLabel.setText(str(self.model_tester.number))
         self.ui.CurrentGuessValueLabel.setText(self.model_tester.test_model())
         self.ui.TotalCorrectGuessLabel.setText(str(self.model_tester.correct_guesses) + f'({self.model_tester.accuracy}%)' )
@@ -217,8 +219,9 @@ class LoadTestWidget(QtWidgets.QWidget):
     
     def test_loop(self):
         self.ui.PictureLabel.setPixmap(QtGui.QPixmap(self.model_tester.imgpath))
+        self.ui.PictureLabel.setScaledContents(True)
         self.ui.CorrectAnswerLabel.setText(str(self.model_tester.number))
-        self.ui.CurrentGuessValueLabel.setText(self.model_tester.test_model())
+        #self.ui.CurrentGuessValueLabel.setText(self.model_tester.test_model())
         self.ui.TotalCorrectGuessLabel.setText(str(self.model_tester.correct_guesses) + f'({self.model_tester.accuracy}%)' )
         self.ui.TotalGuessesLabel.setText(str(self.model_tester.guesses))
                                          
@@ -242,12 +245,20 @@ class TrainSaveWidget(QtWidgets.QWidget):
         self.ui.EpochUpdateSpinBox.setMaximum(1000)
         self.ui.EpochCountSpinBox.setMinimum(5)
         self.ui.EpochUpdateSpinBox.setMinimum(1)
-        self.ui.BatchSizeSpinBox.setValue(16)
+        self.ui.BatchSizeSpinBox.setValue(32)
         self.ui.LearningRateSpinBox.setValue(0.01)
         self.ui.LearningRateSpinBox.setDecimals(4)
         self.ui.EpochCountSpinBox.setValue(10)
         self.ui.TrainModelButton.clicked.connect(lambda : self.start_training())
         self.ui.SaveModelButton.clicked.connect(lambda: self.save_model())
+        self.ui.CreateConvolutionalNeuralNetwork.stateChanged.connect(lambda: self.ChangeState())
+
+    def ChangeState(self):
+        if self.ui.CreateConvolutionalNeuralNetwork.isChecked():
+            self.ui.BatchSizeSpinBox.setValue(32)
+            self.ui.BatchSizeSpinBox.setDisabled(True)
+        else:
+            self.ui.BatchSizeSpinBox.setDisabled(False)
 
     def save_model(self):
         FileName=QtWidgets.QFileDialog.getSaveFileName(self,'Choose Location to save Model',DIRECTORY+f"//Models//{self.model.mdltype}//","Pytorch Models (*.pth)")[0]
@@ -452,7 +463,6 @@ class ModelTester_Manual():
         image_tensor = PILToTensor()(image)
         image_tensor = image_tensor.float()
         image_tensor.to(PREFERRED_DEVICE)
-        print(image_tensor.shape)
         with torch.no_grad():
             self.current_guess = torch.argmax(self.model(image_tensor).item())
     

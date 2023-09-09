@@ -68,7 +68,7 @@ class Ui_LoadTestWidget(object):
         self.PictureLabel = QLabel(Form)
         self.PictureLabel.setObjectName(u"PictureLabel")
 
-        self.verticalLayout.addWidget(self.PictureLabel)
+        self.verticalLayout.addWidget(self.PictureLabel,alignment=Qt.AlignCenter)
 
         self.StatisticsGridLayout = QGridLayout()
         self.StatisticsGridLayout.setObjectName(u"StatisticsGridLayout")
