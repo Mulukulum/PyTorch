@@ -10,16 +10,16 @@ PREFERRED_DEVICE='cuda'
 
     
 class ConvolutionalModel(nn.Module):
-    def __init__(self,loss_fn=nn.LeakyReLU):
+    def __init__(self,activation_fn=nn.Tanh):
         super().__init__()
         self.to(PREFERRED_DEVICE)
         self.model = nn.Sequential(
             nn.Conv2d(1,32,(3,3)),
-            loss_fn(),
+            activation_fn(),
             nn.Conv2d(32, 64, (3,3)), 
-            loss_fn(),
-            nn.Conv2d(64, 64, (3,3)), 
-            loss_fn(),
+            activation_fn(),
+            nn.Conv2d(64, 64, (3,3)),
+            activation_fn(),
             nn.Flatten(), 
             nn.Linear(64*22*22, 10),
         )
@@ -30,20 +30,16 @@ class ConvolutionalModel(nn.Module):
         return self.model(x)
 
 class LinearNetwork2(nn.Module):
-    def __init__(self,activation_function=nn.Softmax):
+    def __init__(self,activation_function=nn.LeakyReLU):
         super().__init__()
         self.to(PREFERRED_DEVICE)
         self.flatten = nn.Flatten()
         self.model = nn.Sequential(
             nn.Linear(28*28, 512),
             activation_function(),
-            nn.Linear(512,256),
+            nn.Linear(512,100),
             activation_function(),
-            nn.Linear(256,128),
-            activation_function(),
-            nn.Linear(128,54),
-            nn.LeakyReLU(),
-            nn.Linear(54,10),
+            nn.Linear(100,10),
         )
 
     def forward(self, x):
@@ -83,10 +79,10 @@ class LinearNetwork(nn.Module):
         return self.model(x)
 
 
-model = LinearNetwork2()
+model = ConvolutionalModel()
 epochs=10000
-learning_rate=8e-2
-batch_size=36
+learning_rate=1.8e-2
+batch_size=32
 
 
 loss_fn= nn.CrossEntropyLoss()
