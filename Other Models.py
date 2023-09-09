@@ -6,7 +6,7 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 from torch.optim import SGD, Adam
 
-PREFERRED_DEVICE='cpu'
+PREFERRED_DEVICE='cuda'
 
     
 class ConvolutionalModel(nn.Module):
@@ -28,24 +28,46 @@ class ConvolutionalModel(nn.Module):
     def forward(self, x): 
         x = x.to(PREFERRED_DEVICE)
         return self.model(x)
-    
+
+class LinearNetwork2(nn.Module):
+    def __init__(self,activation_function=nn.Softmax):
+        super().__init__()
+        self.to(PREFERRED_DEVICE)
+        self.flatten = nn.Flatten()
+        self.model = nn.Sequential(
+            nn.Linear(28*28, 512),
+            activation_function(),
+            nn.Linear(512,256),
+            activation_function(),
+            nn.Linear(256,128),
+            activation_function(),
+            nn.Linear(128,54),
+            nn.LeakyReLU(),
+            nn.Linear(54,10),
+        )
+
+    def forward(self, x):
+        x = self.flatten(x)
+        x = x.to(PREFERRED_DEVICE)
+        return self.model(x)
+
 
 class LinearNetwork(nn.Module):
-    def __init__(self,loss_fn=nn.LeakyReLU):
+    def __init__(self,activation_function=nn.LeakyReLU):
         super().__init__()
         self.to(PREFERRED_DEVICE)
         self.flatten = nn.Flatten()
         self.model = nn.Sequential(
             nn.Linear(28*28, 686),
-            loss_fn(),
+            activation_function(),
             nn.Linear(686 , 512),
-            loss_fn(),
+            activation_function(),
             nn.Linear(512,480),
-            loss_fn(),
+            activation_function(),
             nn.Linear(480,256),
-            loss_fn(),
+            activation_function(),
             nn.Linear(256,128),
-            loss_fn(),
+            activation_function(),
             nn.Linear(128,100),
             nn.ReLU(),
             nn.Linear(100,50),
@@ -54,9 +76,6 @@ class LinearNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(25,10),
         )
-    
-    def __repr__(self):
-        return 'Linear'
 
     def forward(self, x):
         x = self.flatten(x)
@@ -64,11 +83,11 @@ class LinearNetwork(nn.Module):
         return self.model(x)
 
 
-model = LinearNetwork()
-
+model = LinearNetwork2()
 epochs=10000
-learning_rate=5e-1
-batch_size=4
+learning_rate=8e-2
+batch_size=36
+
 
 loss_fn= nn.CrossEntropyLoss()
 optimizer=SGD(model.parameters(),lr=learning_rate)
@@ -85,7 +104,10 @@ def train_loop(dataloader, model, loss_fn, optimizer):
     # Set the model to training mode - important for batch normalization and dropout layers
     # Unnecessary in this situation but added for best practices
     model.train()
+    model.to(PREFERRED_DEVICE)
     for batch, (X, y) in enumerate(dataloader):
+        X=X.to(PREFERRED_DEVICE)
+        y=y.to(PREFERRED_DEVICE)
         pred = model(X)
         loss = loss_fn(pred, y)
 
@@ -94,7 +116,6 @@ def train_loop(dataloader, model, loss_fn, optimizer):
         optimizer.zero_grad()
 
         if batch % 100 == 0:
-            print(batch)
             loss, current = loss.item(), (batch + 1) * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
             
@@ -102,12 +123,15 @@ def train_loop(dataloader, model, loss_fn, optimizer):
 
 def test_loop(dataloader, model, loss_fn):
     model.eval()
+    model.to(PREFERRED_DEVICE)
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     test_loss, correct = 0, 0
 
     with torch.no_grad():
         for X, y in dataloader:
+            X=X.to(PREFERRED_DEVICE)
+            y=y.to(PREFERRED_DEVICE)
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
