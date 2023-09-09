@@ -76,7 +76,6 @@ if USE_CUDA_WHEN_AVAILABLE:
 
 def save_model_state_dict(model_state_dict: dict ,filepath: str ) -> None :
     torch.save(model_state_dict,filepath)
-    if model_state_dict=={} : print("EMPTY DICT")
     logging.info(f'File Saved to {filepath}')
 
 def get_model_state_dict(filepath: str, current_device: str ) -> dict : 
