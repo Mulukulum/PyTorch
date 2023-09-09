@@ -3,7 +3,6 @@ import sys
 import logging
 import random
 import os
-import typing
 
 RUNNING_SCRIPT_FROM = sys.argv[0]
 DIRECTORY=os.path.dirname(RUNNING_SCRIPT_FROM)
@@ -166,7 +165,7 @@ class LoadTestWidget(QtWidgets.QWidget):
             if dirs[-1]=='Conv':
                 model_type=ConvolutionalModel
             elif dirs[-1]=='Linear':
-                model_type=LinearNetwork 
+                model_type=LinearNetwork
             else:
                 box=QtWidgets.QMessageBox.question(self,'Choose model type to be Linear?','The type of the model is unclear. Set it to be a linear Model?',QtWidgets.QMessageBox.Yes|QtWidgets.QMessageBox.No)
                 if box==QtWidgets.QMessageBox.Yes:
@@ -174,13 +173,20 @@ class LoadTestWidget(QtWidgets.QWidget):
                 else:
                     model_type=ConvolutionalModel
 
-        #If the model loaded, and we know the type make the model and the tester object
+        #If the model loaded, and we know the type, make the model and the tester object
         
-        model=model_type()
-        model.load_state_dict(state_dict)
-        model.eval()
-        tester=ModelTester_Manual(model=model)
+        self.model=model_type()
+        self.model.load_state_dict(state_dict)
+        self.model.eval()
+        self.model_tester=ModelTester_Manual(model=self.model)
+        self.ModelLoaded=True
+        self.ui.TestForLongDuration.setDisabled(False)
+        self.ui.TestImageButton.setDisabled(False)
+
+
         
+
+
 
 
 
