@@ -74,6 +74,7 @@ if USE_CUDA_WHEN_AVAILABLE:
 
 def save_model_state_dict(model_state_dict: dict ,filepath: str ) -> None :
     torch.save(model_state_dict,filepath)
+    if model_state_dict=={} : print("EMPTY DICT")
     logging.info(f'File Saved to {filepath}')
 
 def get_model_state_dict(filepath: str, current_device: str ) -> dict : 
@@ -178,7 +179,7 @@ class LoadTestWidget(QtWidgets.QWidget):
                 logging.info('Couldnt unpickle model')
                 QtWidgets.QMessageBox.information(self,"Model could not be opened","Please choose a valid file",QtWidgets.QMessageBox.Ok)
                 return
-            dirs = filepath.split('\/')
+            dirs=filepath.split('/')
             if dirs[-2]=='Conv':
                 model_type=ConvolutionalModel
             elif dirs[-2]=='Linear':
@@ -231,7 +232,7 @@ class TrainSaveWidget(QtWidgets.QWidget):
         super().__init__(frame)
         self.ui = Ui_TrainSaveWidget()
         self.ui.setupUi(self)
-        self.model=ConvolutionalModel()
+        self.model=LinearNetwork()
         #self.ui.SaveModelButton.setDisabled(True)
         self.ui.BatchSizeSpinBox.setMinimum(1)
         self.ui.BatchSizeSpinBox.setMaximum(256)
