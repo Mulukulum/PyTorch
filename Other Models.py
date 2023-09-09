@@ -15,9 +15,9 @@ class ConvolutionalModel(nn.Module):
         self.to(PREFERRED_DEVICE)
         self.model = nn.Sequential(
             nn.Conv2d(1,32,(3,3)),
-            activation_fn(9e-2),
-            nn.Conv2d(32, 64, (3,3)), 
             activation_fn(3e-2),
+            nn.Conv2d(32, 64, (3,3)), 
+            activation_fn(1.8e-2),
             nn.Conv2d(64, 64, (3,3)),
             activation_fn(),
             nn.Flatten(), 
@@ -81,8 +81,8 @@ class LinearNetwork(nn.Module):
 
 model = ConvolutionalModel()
 epochs=10000
-learning_rate=1.8e-2
-batch_size=32
+learning_rate=6e-2
+batch_size=64
 
 
 loss_fn= nn.CrossEntropyLoss()
