@@ -16,10 +16,31 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="OptionsGridLayout">
-     <item row="2" column="2">
-      <widget class="QPushButton" name="TestImageButton">
+     <item row="0" column="0" colspan="2">
+      <widget class="QPushButton" name="LoadModelButton">
        <property name="text">
-        <string>Test another Image</string>
+        <string>Load Model</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="ModelNameLabel">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="PauseTestingButton">
+       <property name="text">
+        <string>Pause Testing</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLabel" name="ModelTypeLabel">
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>
@@ -37,31 +58,17 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="ModelNameLabel">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0" colspan="3">
-      <widget class="QPushButton" name="LoadModelButton">
-       <property name="text">
-        <string>Load Model</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLabel" name="ModelTypeLabel">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="2">
       <widget class="QPushButton" name="TestForLongDuration">
        <property name="text">
         <string>Test for A Long Duration</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QPushButton" name="TestImageButton">
+       <property name="text">
+        <string>Test another Image</string>
        </property>
       </widget>
      </item>

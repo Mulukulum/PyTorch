@@ -22,10 +22,25 @@ class Ui_LoadTestWidget(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.OptionsGridLayout = QGridLayout()
         self.OptionsGridLayout.setObjectName(u"OptionsGridLayout")
-        self.TestImageButton = QPushButton(Form)
-        self.TestImageButton.setObjectName(u"TestImageButton")
+        self.LoadModelButton = QPushButton(Form)
+        self.LoadModelButton.setObjectName(u"LoadModelButton")
 
-        self.OptionsGridLayout.addWidget(self.TestImageButton, 2, 2, 1, 1)
+        self.OptionsGridLayout.addWidget(self.LoadModelButton, 0, 0, 1, 2)
+
+        self.ModelNameLabel = QLabel(Form)
+        self.ModelNameLabel.setObjectName(u"ModelNameLabel")
+
+        self.OptionsGridLayout.addWidget(self.ModelNameLabel, 1, 1, 1, 1)
+
+        self.PauseTestingButton = QPushButton(Form)
+        self.PauseTestingButton.setObjectName(u"PauseTestingButton")
+
+        self.OptionsGridLayout.addWidget(self.PauseTestingButton, 0, 2, 1, 1)
+
+        self.ModelTypeLabel = QLabel(Form)
+        self.ModelTypeLabel.setObjectName(u"ModelTypeLabel")
+
+        self.OptionsGridLayout.addWidget(self.ModelTypeLabel, 2, 1, 1, 1)
 
         self.ModelType = QLabel(Form)
         self.ModelType.setObjectName(u"ModelType")
@@ -37,25 +52,15 @@ class Ui_LoadTestWidget(object):
 
         self.OptionsGridLayout.addWidget(self.ModelName, 1, 0, 1, 1)
 
-        self.ModelNameLabel = QLabel(Form)
-        self.ModelNameLabel.setObjectName(u"ModelNameLabel")
-
-        self.OptionsGridLayout.addWidget(self.ModelNameLabel, 1, 1, 1, 1)
-
-        self.LoadModelButton = QPushButton(Form)
-        self.LoadModelButton.setObjectName(u"LoadModelButton")
-
-        self.OptionsGridLayout.addWidget(self.LoadModelButton, 0, 0, 1, 3)
-
-        self.ModelTypeLabel = QLabel(Form)
-        self.ModelTypeLabel.setObjectName(u"ModelTypeLabel")
-
-        self.OptionsGridLayout.addWidget(self.ModelTypeLabel, 2, 1, 1, 1)
-
         self.TestForLongDuration = QPushButton(Form)
         self.TestForLongDuration.setObjectName(u"TestForLongDuration")
 
         self.OptionsGridLayout.addWidget(self.TestForLongDuration, 1, 2, 1, 1)
+
+        self.TestImageButton = QPushButton(Form)
+        self.TestImageButton.setObjectName(u"TestImageButton")
+
+        self.OptionsGridLayout.addWidget(self.TestImageButton, 2, 2, 1, 1)
 
 
         self.verticalLayout.addLayout(self.OptionsGridLayout)
@@ -118,13 +123,14 @@ class Ui_LoadTestWidget(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.TestImageButton.setText(QCoreApplication.translate("Form", u"Test another Image", None))
+        self.LoadModelButton.setText(QCoreApplication.translate("Form", u"Load Model", None))
+        self.ModelNameLabel.setText("")
+        self.PauseTestingButton.setText(QCoreApplication.translate("Form", u"Pause Testing", None))
+        self.ModelTypeLabel.setText("")
         self.ModelType.setText(QCoreApplication.translate("Form", u"Model Type :", None))
         self.ModelName.setText(QCoreApplication.translate("Form", u"Model Name : ", None))
-        self.ModelNameLabel.setText("")
-        self.LoadModelButton.setText(QCoreApplication.translate("Form", u"Load Model", None))
-        self.ModelTypeLabel.setText("")
         self.TestForLongDuration.setText(QCoreApplication.translate("Form", u"Test for A Long Duration", None))
+        self.TestImageButton.setText(QCoreApplication.translate("Form", u"Test another Image", None))
         self.PictureLabel.setText("")
         self.TotalGuessesLabel.setText("")
         self.ActualNumber.setText(QCoreApplication.translate("Form", u"Actual Number : ", None))
@@ -135,4 +141,3 @@ class Ui_LoadTestWidget(object):
         self.CurrentGuessValueLabel.setText("")
         self.CorrectAnswerLabel.setText("")
     # retranslateUi
-

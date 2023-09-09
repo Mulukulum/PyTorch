@@ -19,7 +19,7 @@ except FileExistsError:
         file.write(f'{USE_CUDA_WHEN_AVAILABLE}')
 else:
     USE_CUDA_WHEN_AVAILABLE=0
-
+    
 logging.basicConfig(filename='NeuralNetwork.log',level=LOGGING_LEVEL)
 
 def install_package(package_name: str) -> None:
@@ -64,6 +64,11 @@ from ui_LoadTest import Ui_LoadTestWidget
 def get_cuda_information():
     device_count=torch.cuda.device_count()
     return dict([(i,torch.cuda.get_device_name()) for i in range(device_count)])
+
+if USE_CUDA_WHEN_AVAILABLE:
+    if get_cuda_information():
+        PREFERRED_DEVICE='cuda'
+
 
 def save_model_state_dict(model_state_dict: dict ,filepath: str ) -> None :
     torch.save(model_state_dict,filepath)
@@ -137,6 +142,47 @@ class LoadTestWidget(QtWidgets.QWidget):
         super().__init__(frame)
         self.ui = Ui_LoadTestWidget()
         self.ui.setupUi(self)
+        self.ModelLoaded=False
+        self.ui.TestForLongDuration.setDisabled(True)
+        self.ui.TestImageButton.setDisabled(True)
+        self.ui.PauseTestingButton.setDisabled(True)
+        self.model_tester=None
+        self.ui.LoadModelButton.clicked.connect(lambda : self.load_model())
+    
+    def load_model(self):
+        #popup to select the model
+        filepath = (QtWidgets.QFileDialog.getOpenFileName(self,"Open a saved Model",DIRECTORY+"//Models",'All Files (*)'))[0]
+        if filepath=='' : #No file was selected
+            return
+        else:
+            try:
+                state_dict=get_model_state_dict(filepath,PREFERRED_DEVICE)
+            except :
+                logging.info('Couldnt unpickle model')
+                QtWidgets.QMessageBox.information(self,"Model could not be opened","Please choose a valid file",QtWidgets.QMessageBox.Ok)
+                return
+            dirs = filepath.split('\/')
+            print(dirs)
+            if dirs[-1]=='Conv':
+                model_type=ConvolutionalModel
+            elif dirs[-1]=='Linear':
+                model_type=LinearNetwork 
+            else:
+                box=QtWidgets.QMessageBox.question(self,'Choose model type to be Linear?','The type of the model is unclear. Set it to be a linear Model?',QtWidgets.QMessageBox.Yes|QtWidgets.QMessageBox.No)
+                if box==QtWidgets.QMessageBox.Yes:
+                    model_type=LinearNetwork
+                else:
+                    model_type=ConvolutionalModel
+
+        #If the model loaded, and we know the type make the model and the tester object
+        
+        model=model_type()
+        model.load_state_dict(state_dict)
+        model.eval()
+        tester=ModelTester_Manual(model=model)
+        
+
+
 
 class TrainSaveWidget(QtWidgets.QWidget):
 
