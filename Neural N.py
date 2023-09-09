@@ -3,6 +3,9 @@ import sys
 import logging
 import random
 import os
+import typing
+
+from PyQt5.QtCore import QObject
 
 RUNNING_SCRIPT_FROM = sys.argv[0]
 DIRECTORY=os.path.dirname(RUNNING_SCRIPT_FROM)
@@ -143,6 +146,8 @@ class SettingsWidget(QtWidgets.QWidget):
 
 class LoadTestWidget(QtWidgets.QWidget):
 
+    #get_model_guess=QtCore.pyqtSignal()
+
     def __init__(self,frame):
         super().__init__(frame)
         self.ui = Ui_LoadTestWidget()
@@ -152,13 +157,14 @@ class LoadTestWidget(QtWidgets.QWidget):
         self.ui.TestImageButton.setDisabled(True)
         self.ui.PauseTestingButton.setDisabled(True)
         self.model_tester=None
-        self.ui.LoadModelButton.clicked.connect(lambda : self.load_model())
+        self.ui.LoadModelButton.clicked.connect(lambda : self.load_and_begin_testing())
+        self.ui.TestImageButton.clicked.connect(lambda: self.test_loop())
     
     def load_model(self):
         #popup to select the model
         filepath = (QtWidgets.QFileDialog.getOpenFileName(self,"Open a saved Model",DIRECTORY+"//Models",'All Files (*)'))[0]
         if filepath=='' : #No file was selected
-            return
+            return 'nofile'
         else:
             print(f'{filepath=}')
             try:
@@ -186,20 +192,31 @@ class LoadTestWidget(QtWidgets.QWidget):
         self.model.eval()
         self.model_tester=ModelTester_Manual(model=self.model)
         self.ModelLoaded=True
-        self.ui.TestForLongDuration.setDisabled(False)
+        #self.ui.TestForLongDuration.setDisabled(False)
         self.ui.TestImageButton.setDisabled(False)
         self.ui.ModelNameLabel.setText(dirs[-1])
         self.ui.ModelTypeLabel.setText(str(self.model))
-                                    
 
+        #Basic setup complete. Now, begin testing model
     
-
-
-        
-
-
-
-
+    def load_and_begin_testing(self):
+        a=self.load_model()
+        if a=='nofile':
+            return
+        #Gets the current file from the tester and displays it.
+        self.ui.PictureLabel.setPixmap(QtGui.QPixmap(self.model_tester.imgpath))
+        self.ui.CorrectAnswerLabel.setText(str(self.model_tester.number))
+        self.ui.CurrentGuessValueLabel.setText(self.model_tester.test_model())
+        self.ui.TotalCorrectGuessLabel.setText(str(self.model_tester.correct_guesses) + f'({self.model_tester.accuracy}%)' )
+        self.ui.TotalGuessesLabel.setText(str(self.model_tester.guesses))
+    
+    def test_loop(self):
+        self.ui.PictureLabel.setPixmap(QtGui.QPixmap(self.model_tester.imgpath))
+        self.ui.CorrectAnswerLabel.setText(str(self.model_tester.number))
+        self.ui.CurrentGuessValueLabel.setText(self.model_tester.test_model())
+        self.ui.TotalCorrectGuessLabel.setText(str(self.model_tester.correct_guesses) + f'({self.model_tester.accuracy}%)' )
+        self.ui.TotalGuessesLabel.setText(str(self.model_tester.guesses))
+                                         
 
 class TrainSaveWidget(QtWidgets.QWidget):
 
@@ -311,7 +328,11 @@ class ModelTester():
         self.results = f"Test Error: \n Accuracy: {self.correct_percentage:>0.1f}%, Avg loss: {self.average_loss:>8f} \n"
         return (self.correct_percentage,self.average_loss,self.results)
 
+
+
 class ModelTester_Manual():
+
+    
     
     def __init__(self, model) : 
         if 'MNIST Dataset JPG format' not in os.listdir(DIRECTORY):
@@ -326,6 +347,7 @@ class ModelTester_Manual():
         self.correct_guesses=0
         self.accuracy=0.00
 
+
     def update_file(self):
         self.number=random.choice('0123456789')
         self.random_file=random.choice(os.listdir(DIRECTORY+f'//MNIST Dataset JPG format//MNIST - JPG - testing//{self.number}//'))
@@ -335,8 +357,7 @@ class ModelTester_Manual():
         self.guesses+=1
         image = PillowImage.open(self.imgpath)
         image_tensor = ToTensor()(image).unsqueeze(0)
-        result = torch.argmax(self.model(image_tensor).item())
-        return result
+        self.current_guess = torch.argmax(self.model(image_tensor).item())
     
     def test_model(self):
         self.testing=True
@@ -344,6 +365,7 @@ class ModelTester_Manual():
             self.correct_guesses+=1
         self.accuracy=self.correct_guesses/self.guesses
         self.testing=False
+        self.update_file()
         
 
 #App Start
