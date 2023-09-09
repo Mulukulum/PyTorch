@@ -152,3 +152,4 @@ cython_debug/
 
 .vscode/settings.json
 .vscode/**
+NeuralNetwork.log

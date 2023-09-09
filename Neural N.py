@@ -92,6 +92,9 @@ class ConvolutionalModel(nn.Module):
             nn.Linear(64*22*22, 10)
         )
     
+    def __repr__(self):
+        return 'Convolutional'
+
     def forward(self, x): 
         return self.model(x)
 
@@ -110,6 +113,9 @@ class LinearNetwork(nn.Module):
             nn.LeakyReLU(),
             nn.Linear(100, 10),
         )
+    
+    def __repr__(self):
+        return 'Linear'
 
     def forward(self, x):
         x = self.flatten(x)
@@ -154,6 +160,7 @@ class LoadTestWidget(QtWidgets.QWidget):
         if filepath=='' : #No file was selected
             return
         else:
+            print(f'{filepath=}')
             try:
                 state_dict=get_model_state_dict(filepath,PREFERRED_DEVICE)
             except :
@@ -161,10 +168,9 @@ class LoadTestWidget(QtWidgets.QWidget):
                 QtWidgets.QMessageBox.information(self,"Model could not be opened","Please choose a valid file",QtWidgets.QMessageBox.Ok)
                 return
             dirs = filepath.split('\/')
-            print(dirs)
-            if dirs[-1]=='Conv':
+            if dirs[-2]=='Conv':
                 model_type=ConvolutionalModel
-            elif dirs[-1]=='Linear':
+            elif dirs[-2]=='Linear':
                 model_type=LinearNetwork
             else:
                 box=QtWidgets.QMessageBox.question(self,'Choose model type to be Linear?','The type of the model is unclear. Set it to be a linear Model?',QtWidgets.QMessageBox.Yes|QtWidgets.QMessageBox.No)
@@ -182,6 +188,11 @@ class LoadTestWidget(QtWidgets.QWidget):
         self.ModelLoaded=True
         self.ui.TestForLongDuration.setDisabled(False)
         self.ui.TestImageButton.setDisabled(False)
+        self.ui.ModelNameLabel.setText(dirs[-1])
+        self.ui.ModelTypeLabel.setText(str(self.model))
+                                    
+
+    
 
 
         
