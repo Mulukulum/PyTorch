@@ -3,7 +3,7 @@ import sys
 import logging
 import random
 import os
-import typing
+from time import sleep
 
 from PyQt5.QtCore import QObject
 
@@ -83,6 +83,7 @@ class ConvolutionalModel(nn.Module):
 
     def __init__(self):
         super().__init__()
+        self.to(PREFERRED_DEVICE)
         self.mdltype='Conv'
         self.model = nn.Sequential(
             nn.Conv2d(1,32,(3,3)),
@@ -99,12 +100,15 @@ class ConvolutionalModel(nn.Module):
         return 'Convolutional'
 
     def forward(self, x): 
+        x = x.to(PREFERRED_DEVICE)
+        #print(x.device)
         return self.model(x)
 
 class LinearNetwork(nn.Module):
 
     def __init__(self):
         super().__init__()
+        self.to(PREFERRED_DEVICE)
         self.mdltype='Linear'
         self.flatten = nn.Flatten()
         self.model = nn.Sequential(
@@ -122,6 +126,7 @@ class LinearNetwork(nn.Module):
 
     def forward(self, x):
         x = self.flatten(x)
+        x = x.to(PREFERRED_DEVICE)
         return self.model(x)
 
 class SettingsWidget(QtWidgets.QWidget):
@@ -166,7 +171,7 @@ class LoadTestWidget(QtWidgets.QWidget):
         if filepath=='' : #No file was selected
             return 'nofile'
         else:
-            print(f'{filepath=}')
+            #print(f'{filepath=}')
             try:
                 state_dict=get_model_state_dict(filepath,PREFERRED_DEVICE)
             except :
@@ -220,10 +225,65 @@ class LoadTestWidget(QtWidgets.QWidget):
 
 class TrainSaveWidget(QtWidgets.QWidget):
 
+    Start_Training=QtCore.pyqtSignal()
+
     def __init__(self,frame):
         super().__init__(frame)
         self.ui = Ui_TrainSaveWidget()
-        self.ui.setupUi(self)        
+        self.ui.setupUi(self)
+        self.model=ConvolutionalModel()
+        #self.ui.SaveModelButton.setDisabled(True)
+        self.ui.BatchSizeSpinBox.setMinimum(1)
+        self.ui.BatchSizeSpinBox.setMaximum(256)
+        self.ui.LearningRateSpinBox.setMaximum(1.0)
+        self.ui.LearningRateSpinBox.setMinimum(0.0)
+        self.ui.EpochCountSpinBox.setMaximum(1000000)
+        self.ui.EpochUpdateSpinBox.setMaximum(1000)
+        self.ui.EpochCountSpinBox.setMinimum(5)
+        self.ui.EpochUpdateSpinBox.setMinimum(1)
+        self.ui.BatchSizeSpinBox.setValue(16)
+        self.ui.LearningRateSpinBox.setValue(0.01)
+        self.ui.LearningRateSpinBox.setDecimals(4)
+        self.ui.EpochCountSpinBox.setValue(10)
+        self.ui.TrainModelButton.clicked.connect(lambda : self.start_training())
+        self.ui.SaveModelButton.clicked.connect(lambda: self.save_model())
+
+    def save_model(self):
+        FileName=QtWidgets.QFileDialog.getSaveFileName(self,'Choose Location to save Model',DIRECTORY+f"//Models//{self.model.mdltype}//","Pytorch Models (*.pth)")[0]
+        save_model_state_dict(self.model,FileName)
+        
+
+    def start_training(self):
+        batch_size=self.ui.BatchSizeSpinBox.value()
+        learning_rate=self.ui.LearningRateSpinBox.value()
+        epochs=self.ui.EpochCountSpinBox.value()
+        epoch_update_after_this_many_epochs=self.ui.EpochUpdateSpinBox.value()
+        IsConv=self.ui.CreateConvolutionalNeuralNetwork.isChecked()
+        if IsConv:
+            self.model=ConvolutionalModel()
+        else:
+            self.model=LinearNetwork()
+        self.ui.BatchSizeSpinBox.setDisabled(True)
+        self.ui.EpochCountSpinBox.setDisabled(True)
+        self.ui.EpochUpdateSpinBox.setDisabled(True)
+        self.ui.LearningRateSpinBox.setDisabled(True)
+        self.ui.CreateConvolutionalNeuralNetwork.setDisabled(True)
+        self.ui.StatusUpdateLabel.append(f'STARTING TRAINING FOR MODEL WITH PARAMETERS : \n{batch_size=}\n{learning_rate=}\n{epochs=}\n{epoch_update_after_this_many_epochs=}\n')
+        self.ui.SaveModelButton.setDisabled(True)
+        self.ui.TrainModelButton.setDisabled(True)
+        trainer=ModelTrainer(model=self.model,batch_size=batch_size,learning_rate=learning_rate,status_report_after=epoch_update_after_this_many_epochs,number_of_epochs=epochs,parent=self)
+        trainer.Updated.connect(lambda msg: self.ui.StatusUpdateLabel.append('\n'+msg+'\n'))
+        QtWidgets.QMessageBox.information(self,"TRAINING STARTING", "Check the Terminal for updates")
+        self.Start_Training.emit()
+        trainer.epoch_loops(model=trainer.model,loss_fn=trainer.loss_fn,optimizer=trainer.optimizer,number_of_epochs=trainer.number_of_epochs,learning_rate=trainer.learning_rate,status_report_after=trainer.status_report_after,batch_size=trainer.batch_size)
+        self.ui.SaveModelButton.setDisabled(False)
+        self.ui.TrainModelButton.setDisabled(False)
+        self.ui.BatchSizeSpinBox.setDisabled(False)
+        self.ui.EpochCountSpinBox.setDisabled(False)
+        self.ui.EpochUpdateSpinBox.setDisabled(False)
+        self.ui.LearningRateSpinBox.setDisabled(False)
+        #Training Loop started
+
 
 class PTAppMainWindow(QtWidgets.QMainWindow):
 
@@ -232,7 +292,8 @@ class PTAppMainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.TRAIN_SAVE_WIDGET=1
         self.LOAD_TEST_WIDGET=2
-        self.CurrentFocus=self.SETTINGS_WIDGET=3
+        self.CurrentFocus=0
+        self.SETTINGS_WIDGET=3
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.resize(960,540)
@@ -240,6 +301,8 @@ class PTAppMainWindow(QtWidgets.QMainWindow):
         self.ui.SettingsButton.clicked.connect(lambda : self.showSettingsWidget())
         self.ui.LoadTestButton.clicked.connect(lambda: self.showLoadTestWidget())
         self.ui.TrainSaveButton.clicked.connect(lambda: self.showTrainSaveWidget())
+        self.showSettingsWidget()
+        
     
     def showSettingsWidget(self):
         if self.CurrentFocus==self.SETTINGS_WIDGET:
@@ -272,13 +335,32 @@ class PTAppMainWindow(QtWidgets.QMainWindow):
         self.widgetFrame=trainsave_widget
     
 
-class ModelTrainer():
+class ModelTrainer(QtCore.QObject):
+
+    epoch_status_messages = ['',]
+    Updated=QtCore.pyqtSignal(str)
 
     def __init__(self, model: torch.nn.Module,loss_fn=None,
                  optimizer=None, number_of_epochs: int=10, 
                  learning_rate: float=0.005, batch_size: int=16,
-                 status_report_after: int = 1  ):
+                 status_report_after: int = 1,parent=None):
+        super().__init__()
+        self.parent=parent
+        self.model=model
+        self.loss_fn=loss_fn
+        self.optimizer=optimizer
+        self.number_of_epochs=number_of_epochs
+        self.learning_rate=learning_rate
+        self.batch_size=batch_size
+        self.status_report_after=status_report_after
+        #parent.Start_Training.connect(self.epoch_loops(model=self.model,loss_fn=self.loss_fn,optimizer=self.optimizer,number_of_epochs=self.number_of_epochs,learning_rate=self.learning_rate,status_report_after=self.status_report_after,batch_size=self.batch_size))
         
+        
+    
+    def epoch_loops(self,model: torch.nn.Module,loss_fn=None,
+                 optimizer=None, number_of_epochs: int=10, 
+                 learning_rate: float=0.005, batch_size: int=16,
+                 status_report_after: int = 1 ):
         if loss_fn is None:
             self.loss_fn = nn.CrossEntropyLoss()
         if optimizer is None:
@@ -287,9 +369,10 @@ class ModelTrainer():
         DATA=datasets.MNIST(root='mnist', train=True, transform=ToTensor(), download=True)
         DATASET=DataLoader(DATA, batch_size=batch_size)
         model.train()
+        model.to(PREFERRED_DEVICE)
 
-        self.epoch_status_messages = ['',]
         for epoch in range(1, number_of_epochs+1) : 
+            print(epoch)
             for batch in DATASET:
                 input_batch , actual_values = batch
                 input_batch = input_batch.to(PREFERRED_DEVICE)
@@ -302,10 +385,16 @@ class ModelTrainer():
                 loss.backward()
                 self.optimizer.step()
 
-                if epoch%status_report_after ==0 :
+            if epoch%status_report_after == 0 :
                     self.epoch_status_messages.append(f"Epoch:{epoch} loss = {loss.item()}\n")
+                    print(f"Epoch:{epoch} loss = {loss.item()}\n")
+                    #self.Updated.emit(f"Epoch:{epoch} loss = {loss.item()}\n")
+                    self.parent.ui.StatusUpdateLabel.append(f"Epoch:{epoch} loss = {loss.item()}\n")
+                    
+                    
 
-        #model has finished training at this point
+    def get_status_messages(self):
+        return self.epoch_status_messages
 
 class ModelTester():
 
