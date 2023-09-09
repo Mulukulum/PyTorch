@@ -4,6 +4,7 @@ import logging
 import random
 import os
 from time import sleep
+from PyQt5 import QtGui
 
 from PyQt5.QtCore import QObject
 
@@ -157,18 +158,38 @@ class LoadTestWidget(QtWidgets.QWidget):
     def __init__(self,frame):
         super().__init__(frame)
         self.ui = Ui_LoadTestWidget()
+        self.STOPTESTING=False
         self.ui.setupUi(self)
         self.ModelLoaded=False
         self.ui.TestForLongDuration.setDisabled(True)
         self.ui.TestImageButton.setDisabled(True)
         self.ui.PauseTestingButton.setDisabled(True)
+        self.pause=False
         self.model_tester=None
         self.ui.LoadModelButton.clicked.connect(lambda : self.load_and_begin_testing())
         self.ui.TestImageButton.clicked.connect(lambda: self.test_loop())
         self.ui.TestForLongDuration.clicked.connect(lambda : self.TestForLong())
+        self.ui.PauseTestingButton.clicked.connect(lambda : self.togglePause())
+
+    def StopTesting(self):
+        self.pause=True
+        self.STOPTESTING=True
+    
+    def togglePause(self):
+        if self.pause:
+            self.pause=False
+            self.ui.PauseTestingButton.setText("Pause")
+            self.ui.PauseTestingButton.setDisabled(True)
+            QtCore.QTimer.singleShot(800,lambda: self.ui.PauseTestingButton.setEnabled(True))
+        else:
+            self.pause=True
+            self.ui.PauseTestingButton.setText("Resume")
+            self.ui.PauseTestingButton.setDisabled(True)
+            QtCore.QTimer.singleShot(800,lambda: self.ui.PauseTestingButton.setEnabled(True))
+        
 
     def delay(self,n=1):
-        dieTime= QtCore.QTime.currentTime().addMSecs(1000*n)
+        dieTime= QtCore.QTime.currentTime().addMSecs(int(1000*n))
         while QtCore.QTime.currentTime() < dieTime:
             QtCore.QCoreApplication.processEvents(QtCore.QEventLoop.AllEvents,100)
     
@@ -178,6 +199,12 @@ class LoadTestWidget(QtWidgets.QWidget):
         self.ui.TestImageButton.hide()
         c=500
         while c>0:
+            if self.STOPTESTING:
+                break
+            while self.pause==True:
+                if self.STOPTESTING:
+                    break
+                self.delay(0.4)
             self.ui.TestImageButton.click()
             self.delay(1)
             c-=1
@@ -223,6 +250,7 @@ class LoadTestWidget(QtWidgets.QWidget):
         self.ui.TestImageButton.setDisabled(False)
         self.ui.ModelNameLabel.setText(dirs[-1])
         self.ui.ModelTypeLabel.setText(str(self.model))
+        self.ui.PauseTestingButton.setEnabled(True)
 
         #Basic setup complete. Now, begin testing model
     
@@ -316,6 +344,7 @@ class PTAppMainWindow(QtWidgets.QMainWindow):
    
     def __init__(self):
         super().__init__()
+        self.testwidgetobj=None
         self.TRAIN_SAVE_WIDGET=1
         self.LOAD_TEST_WIDGET=2
         self.CurrentFocus=0
@@ -329,7 +358,14 @@ class PTAppMainWindow(QtWidgets.QMainWindow):
         self.ui.TrainSaveButton.clicked.connect(lambda: self.showTrainSaveWidget())
         self.showSettingsWidget()
         
+    def closeEvent(self, a0:QtGui.QCloseEvent) -> None:
+        if self.testwidgetobj is None:
+            ...
+        else:
+            self.testwidgetobj.STOPTESTING=True
+        return super().closeEvent(a0)
     
+
     def showSettingsWidget(self):
         if self.CurrentFocus==self.SETTINGS_WIDGET:
             return
@@ -347,6 +383,7 @@ class PTAppMainWindow(QtWidgets.QMainWindow):
             self.CurrentFocus=self.LOAD_TEST_WIDGET
         self.widgetFrame.deleteLater()
         loadtest_widget=LoadTestWidget(self.ui.MainWindowFrame)
+        self.testwidgetobj=loadtest_widget
         self.ui.VLayoutForFocusWidget.addWidget(loadtest_widget)
         self.widgetFrame=loadtest_widget
     
@@ -491,17 +528,15 @@ class ModelTester_Manual():
         self.testing=False
         self.update_file()
         return guess
-        
+
 
 #App Start
 
 app=QtWidgets.QApplication(sys.argv)
 window=PTAppMainWindow()
 window.show()
-try:
-    sys.exit(app.exec_())
-except:
-    print("AAA")
+sys.exit(app.exec_())
+
 
 #tensor=torch.zeros(3,900,1600)
 #print(tensor.shape)
