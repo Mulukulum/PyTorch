@@ -6,7 +6,7 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 from torch.optim import SGD, Adam
 
-PREFERRED_DEVICE='cuda'
+PREFERRED_DEVICE='cpu'
 
     
 class ConvolutionalModel(nn.Module):
